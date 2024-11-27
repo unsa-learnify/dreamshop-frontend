@@ -12,19 +12,19 @@
           <!-- NOTE: replaceable zone -->
           <h-input
             class="tw-col-span-full"
-            data-test="reference-input"
             v-model="nameField.value"
             :label="nameField.label"
             :rules="nameField.rules"
+            :maxlength="255"
             filled
           />
           <h-input
             class="tw-col-span-full"
-            data-test="reference-input"
             type="textarea"
             v-model="descriptionField.value"
             :label="descriptionField.label"
             :rules="descriptionField.rules"
+            :maxlength="500"
             filled
           />
           <!-- NOTE: replaceable zone -->
@@ -75,9 +75,11 @@ const $form = ref(null)
 
 /* NOTE: replaceable zone */
 const nameField = reactive({
-  label: 'Nombre',
+  label: 'Nombre *',
   value: null,
-  rules: [],
+  rules: [
+    value => value !== null && value !== '' || 'Nombre necesario' 
+  ],
 });
 const descriptionField = reactive({
   label: 'Descripción',
@@ -95,14 +97,12 @@ const onOpen = async () => {
   submitButton.diable = true
   /* NOTE: replaceable zone */
   const [ productCategoryResponse ] = await Promise.all([
-    ProductCategoryService.retrive(props.data.id)
+    ProductCategoryService.retrieve(props.data.id)
   ]);
-
   if (productCategoryResponse.status) {
     nameField.value = productCategoryResponse.data.name
     descriptionField.value = productCategoryResponse.data.description;
   }
-
   /* NOTE: replaceable zone */
   submitButton.diable = false
 }
@@ -124,7 +124,7 @@ const onSubmit = async () => {
   formData.append('name', nameField.value);
   formData.append('description', descriptionField.value);
   /* NOTE: replaceable zone */
-  const { status, data } = await ProductCategoryService.update(props.data.id, formData) /* NOTE: replaceable */
+  const { status, data } = await ProductCategoryService.update(props.data.id, Object.fromEntries(formData)) /* NOTE: replaceable */
   submitButton.loading = false
 
   if (status){

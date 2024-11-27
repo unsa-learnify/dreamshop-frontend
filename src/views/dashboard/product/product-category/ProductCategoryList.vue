@@ -188,6 +188,7 @@ const columns = [
     name: 'name', 
     field: 'name', 
     label: 'Nombre', 
+    format: value => value?.length > 60 ? value.slice(0, 60) + '...' : value,
     align: 'left', 
     required: true,
   },
@@ -195,6 +196,7 @@ const columns = [
     name: 'description', 
     field: 'description', 
     label: 'Descripción', 
+    format: value => value?.length > 100 ? value.slice(0, 100) + '...' : value,
     align: 'left', 
   },
   { 
@@ -262,9 +264,8 @@ const onRequest = async props => {
   table.pagination.sortBy = props.pagination.sortBy
   table.isLoading = true
   const responseProductCategory = await ProductCategoryService.list({
-    search: table.search.value,
-    name: drawer.filter.name.value,
-    description: drawer.filter.description.value,
+    name: drawer.filter.name.value || table.search.value,
+    description: drawer.filter.description.value /* || table.search.value, */ // TODO
   })
   table.isLoading = false
   if(responseProductCategory.status){

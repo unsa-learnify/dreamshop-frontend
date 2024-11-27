@@ -30,11 +30,11 @@
             flat 
             round 
             dense 
-            :loading="exportExcelButton.isLoading"
-            @click="onExportExcel"
+            :loading="exportPdfButton.isLoading"
+            @click="onExportPdf"
           >
             <Icon.PdfIcon class="tw-fill-primary tw-w-6 tw-h-6"/>
-            <q-tooltip>Exportar Excel</q-tooltip>
+            <q-tooltip>Exportar Pdf</q-tooltip>
           </q-btn>
           <!-- Botón para abrir el panel de filtros avanzados -->
           <q-btn 
@@ -73,34 +73,11 @@
             </q-td>
           </template>
 
-          <!-- NOTE: replaceable zone -->
-          <template #body-cell-risk_type="props">
+          <template #body-cell-price="props">
             <q-td :props="props">
-              {{ props.row.risk_type.name }}
+              {{ Number(props.row.unitPrice).toFixed(2) }} {{ props.row.currency }} 
             </q-td>
           </template>
-
-          <template #body-cell-police_station="props">
-            <q-td :props="props">
-              {{ props.row.police_station.name }}
-            </q-td>
-          </template>
-
-          <template #body-cell-location="props">
-            <q-td :props="props">
-              <q-btn 
-                class="tw-bg-gray-100" 
-                dense 
-                round 
-                flat 
-                @click="onOpenMap(props.row)"
-              >
-                <Icon.SedeIcon class="tw-fill-primary tw-w-6 tw-h-6"/>
-                <q-tooltip>Ubicacion</q-tooltip>
-              </q-btn>
-            </q-td>
-          </template>
-          <!---------------------------->
 
           <!-- Acciones con botones -->
           <template v-slot:body-cell-actions="props">
@@ -167,6 +144,8 @@
           v-model="drawer.filter.min_price.value"
           :label="drawer.filter.min_price.label"
           type="number"
+          min="0"
+          step="0.01"
           debounce
           clearable
           @update:model-value="reloadTable"
@@ -175,6 +154,8 @@
           v-model="drawer.filter.max_price.value"
           :label="drawer.filter.max_price.label"
           type="number"
+          min="0"
+          step="0.01"
           debounce
           clearable
           @update:model-value="reloadTable"
@@ -183,6 +164,8 @@
           v-model="drawer.filter.min_quantity.value"
           :label="drawer.filter.min_quantity.label"
           type="number"
+          min="0"
+          step="1"
           debounce
           clearable
           @update:model-value="reloadTable"
@@ -191,6 +174,8 @@
           v-model="drawer.filter.max_quantity.value"
           :label="drawer.filter.max_quantity.label"
           type="number"
+          min="0"
+          step="1"
           debounce
           clearable
           @update:model-value="reloadTable"
@@ -210,16 +195,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
-import { format } from 'date-fns';
+import { exportFile } from 'quasar';
+import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { ref, reactive, onMounted } from 'vue';
 
 import * as Icon from 'components/icons';
 import HInput from 'components/custom/h-input.vue';
 import HSelect from 'components/custom/h-select.vue';
 import HGroupCheckbox from 'components/custom/h-group-checkbox.vue';
 
-import { exportFile } from 'quasar';
+import ProductService from "services/product/product.service";
+import ProductCategoryService from "services/product/product-category.service";
 
 /* NOTE: replaceable zone */
 const columns = [
@@ -241,27 +228,28 @@ const columns = [
     name: 'name', 
     field: 'name', 
     label: 'Nombre', 
-    align: 'center', 
+    align: 'left', 
     required: true,
   },
   { 
     name: 'category', 
     field: 'category', 
-    label: 'Categoría', 
-    align: 'center', 
+    label: 'Categorías de Productos', 
+    align: 'center',
+    format: value => value?.name,
     required: true,
   },
   { 
-    name: 'unit_price', 
-    field: 'unit_price', 
-    label: 'P. Unitario', 
-    align: 'center', 
+    name: 'price', 
+    field: 'unitPrice', 
+    label: 'Precio Unitario', 
+    align: 'right', 
   },
   { 
     name: 'quantity', 
     field: 'quantity', 
     label: 'Cantidad', 
-    align: 'center', 
+    align: 'right', 
   },
   { 
     name: 'actions', 
@@ -275,7 +263,7 @@ const columns = [
 // Referencias
 const $table = ref(null);
 
-const exportExcelButton = reactive({
+const exportPdfButton = reactive({
   isLoading: false
 })
 
@@ -310,16 +298,16 @@ const drawer = reactive({
       value: null, 
     },
     category: { 
-      label: "Categoría", 
+      label: "Categoría de Productos", 
       value: null, 
       options: [] 
     },
     min_price: { 
-      label: "P. Unitario Mínimo", 
+      label: "Precio Unitario Mínimo", 
       value: null, 
     },
     max_price: { 
-      label: "P. Unitario Máximo", 
+      label: "Precio Unitario Máximo", 
       value: null, 
     },
     min_quantity: { 
@@ -352,11 +340,19 @@ const onRequest = async props => {
   table.pagination.descending = props.pagination.descending
   table.pagination.sortBy = props.pagination.sortBy
   table.isLoading = true
-
+  const responseProduct = await ProductService.list({
+    code: drawer.filter.code.value || table.search.value,
+    name: drawer.filter.name.value || table.search.value,
+    category: drawer.filter.category.value,
+    min_price: drawer.filter.min_price.value,
+    max_price: drawer.filter.max_price.value,
+    min_quantity: drawer.filter.min_quantity.value,
+    max_quantity: drawer.filter.max_quantity.value,
+  })
   table.isLoading = false
-  if(status){
-    table.rows = data.results
-    table.pagination.rowsNumber = data.count
+  if(responseProduct.status){
+    table.rows = responseProduct.data
+    table.pagination.rowsNumber = responseProduct.data.length
     table.pagination.page = props.pagination.page
     table.pagination.rowsPerPage = props.pagination.rowsPerPage
   }
@@ -366,8 +362,14 @@ const onToogle = () => {
   drawer.isOpen = !drawer.isOpen
 }
 
-const onCreate = () => {
-  modal.create = true
+const onExportPdf = async () => {
+  exportPdfButton.isLoading = true;
+  const { status, blob } = await ProductService.exportToPDF();
+  if (status) {
+    const filename = `Inventario de productos ${format(new Date(), 'yyyy-MM-dd')}.pdf`; 
+    exportFile(filename, blob);
+  }
+  exportPdfButton.isLoading = false;
 }
 
 const onEdit = (row) => {
@@ -378,26 +380,6 @@ const onEdit = (row) => {
 const onDelete = (row) => {
   modal.delete = true
   modal.data = row
-}
-
-const onOpenMap = (row) => {
-  const lat = row.location.coordinates[1]
-  const lng = row.location.coordinates[0]
-  window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank')
-}
-
-const onExport = () => {
-  modal.export = true
-}
-
-const onExportExcel = async () => {
-  exportExcelButton.isLoading = true;
-  const { status, blob } = await RiskService.exportExcel();
-  if (status) {
-    const filename = `Reporte de riesgos ${format(new Date(), 'yyyy-MM-dd')}.xlsx`; 
-    exportFile(filename, blob);
-  }
-  exportExcelButton.isLoading = false;
 }
 
 const resetPageAndReloadTable = () => {
@@ -411,5 +393,9 @@ const reloadTable = () => {
 
 onMounted(async () => {
   resetPageAndReloadTable();
+  const [ productCategoryResponse ] = await Promise.all([ ProductCategoryService.list() ])
+  if (productCategoryResponse.status) {
+    drawer.filter.category.options = productCategoryResponse.data.map(item => ({ label: item.name, value: item.id }))
+  }
 });
 </script>

@@ -16,6 +16,7 @@
             v-model="nameField.value"
             :label="nameField.label"
             :rules="nameField.rules"
+            :maxlength="255"
             filled
           />
           <h-input
@@ -25,6 +26,7 @@
             v-model="descriptionField.value"
             :label="descriptionField.label"
             :rules="descriptionField.rules"
+            :maxlength="500"
             filled
           />
           <!-- NOTE: replaceable zone -->
@@ -75,9 +77,11 @@ const $form = ref(null)
 
 /* NOTE: replaceable zone */
 const nameField = reactive({
-  label: 'Nombre',
+  label: 'Nombre *',
   value: null,
-  rules: [],
+  rules: [
+    value => value !== null && value !== '' || 'Nombre necesario' 
+  ],
 });
 const descriptionField = reactive({
   label: 'Descripción',
@@ -111,7 +115,7 @@ const onSubmit = async () => {
   formData.append('name', nameField.value);
   formData.append('description', descriptionField.value);
   /* NOTE: replaceable zone */
-  const { status, data } = await ProductCategoryService.create(formData) /* NOTE: replaceable */
+  const { status, data } = await ProductCategoryService.create(Object.fromEntries(formData)) /* NOTE: replaceable */
   submitButton.loading = false
 
   if (status){

@@ -74,6 +74,12 @@
             </q-td>
           </template>
 
+          <template #body-cell-price="props">
+            <q-td :props="props">
+              {{ Number(props.row.unitPrice).toFixed(2) }} {{ props.row.currency }} 
+            </q-td>
+          </template>
+
           <!-- Acciones con botones -->
           <template v-slot:body-cell-actions="props">
             <q-td class="tw-flex tw-justify-center tw-gap-2">
@@ -139,6 +145,8 @@
           v-model="drawer.filter.min_price.value"
           :label="drawer.filter.min_price.label"
           type="number"
+          min="0"
+          step="0.01"
           debounce
           clearable
           @update:model-value="reloadTable"
@@ -147,6 +155,8 @@
           v-model="drawer.filter.max_price.value"
           :label="drawer.filter.max_price.label"
           type="number"
+          min="0"
+          step="0.01"
           debounce
           clearable
           @update:model-value="reloadTable"
@@ -171,13 +181,13 @@
   />
 
   <edit-product
-    v-model:opened="modal.create" 
+    v-model:opened="modal.edit" 
     :data="modal.data" 
-    @created="reloadTable"
+    @updated="reloadTable"
   />
 
   <delete-product
-    v-model:opened="modal.create" 
+    v-model:opened="modal.delete" 
     :data="modal.data" 
     @deleted="resetPageAndReloadTable"
   />
@@ -186,8 +196,9 @@
 </template>
 
 <script setup>
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { ref, reactive, onMounted } from 'vue';
-import { format } from 'date-fns';
 
 import * as Icon from 'components/icons';
 import HInput from 'components/custom/h-input.vue';
@@ -199,6 +210,7 @@ import EditProduct from './EditProduct.vue';          /* NOTE: replaceable */
 import DeleteProduct from './DeleteProduct.vue';      /* NOTE: replaceable */
 
 import ProductService from "services/product/product.service";
+import ProductCategoryService from "services/product/product-category.service";
 
 /* NOTE: replaceable zone */
 const columns = [
@@ -220,21 +232,43 @@ const columns = [
     name: 'name', 
     field: 'name', 
     label: 'Nombre', 
-    align: 'center', 
+    align: 'left', 
     required: true,
+  },
+  { 
+    name: 'description', 
+    field: 'description', 
+    label: 'Descripción', 
+    format: value => value?.length > 100 ? value.slice(0, 100) + '...' : value,
+    align: 'left', 
   },
   { 
     name: 'category', 
     field: 'category', 
-    label: 'Categoría', 
+    label: 'Categorías de Productos', 
     align: 'center',
+    format: value => value?.name,
     required: true,
   },
   { 
-    name: 'unit_price', 
-    field: 'unit_price', 
-    label: 'P. Unit.', 
+    name: 'price', 
+    field: 'unitPrice', 
+    label: 'Precio Unitario', 
+    align: 'right', 
+  },
+  { 
+    name: 'createdAt', 
+    field: 'createdAt', 
+    label: 'Fecha de Creación', 
     align: 'center', 
+    format: value => value ? format(parseISO(value), 'PPpp', { locale: es }) : '',
+  },
+  { 
+    name: 'updatedAt', 
+    field: 'updatedAt', 
+    label: 'Fecha de Actualización', 
+    align: 'center', 
+    format: value => value ? format(parseISO(value), 'PPpp', { locale: es }) : '',
   },
   { 
     name: 'actions', 
@@ -248,10 +282,6 @@ const columns = [
 // Referencias
 const $table = ref(null);
 
-const exportExcelButton = reactive({
-  isLoading: false
-})
-
 // Datos de la tabla
 const table = reactive({
   isLoading: false,
@@ -260,9 +290,7 @@ const table = reactive({
     placeholder: "Buscar por código o nombre", /* NOTE: replaceable */
   },
   columns: columns,
-  rows: [
-    { id: 1, name: "aasdasd"}
-  ],
+  rows: [],
   pagination: { 
     page: 1,
     rowsPerPage: 10,
@@ -285,20 +313,16 @@ const drawer = reactive({
       value: null, 
     },
     category: { 
-      label: "Categoría", 
+      label: "Categoría de Productos", 
       value: null, 
       options: [] 
     },
     min_price: { 
-      label: "P. Unitario Mínimo", 
+      label: "Precio Unitario Mínimo", 
       value: null, 
     },
     max_price: { 
-      label: "P. Unitario Máximo", 
-      value: null, 
-    },
-    quantity: { 
-      label: "Cantidad", 
+      label: "Precio Unitario Máximo", 
       value: null, 
     },
     /* ----------------------- */
@@ -324,8 +348,11 @@ const onRequest = async props => {
   table.pagination.sortBy = props.pagination.sortBy
   table.isLoading = true
   const responseProduct = await ProductService.list({
-    search: table.search.value,
-    name: drawer.filter.name.value,
+    code: drawer.filter.code.value || table.search.value,
+    name: drawer.filter.name.value || table.search.value,
+    category: drawer.filter.category.value,
+    min_price: drawer.filter.min_price.value,
+    max_price: drawer.filter.max_price.value,
   })
   table.isLoading = false
   if(responseProduct.status){
@@ -354,26 +381,6 @@ const onDelete = (row) => {
   modal.data = row
 }
 
-const onOpenMap = (row) => {
-  const lat = row.location.coordinates[1]
-  const lng = row.location.coordinates[0]
-  window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank')
-}
-
-const onExport = () => {
-  modal.export = true
-}
-
-const onExportExcel = async () => {
-  exportExcelButton.isLoading = true;
-  const { status, blob } = await RiskService.exportExcel();
-  if (status) {
-    const filename = `Reporte de riesgos ${format(new Date(), 'yyyy-MM-dd')}.xlsx`; 
-    exportFile(filename, blob);
-  }
-  exportExcelButton.isLoading = false;
-}
-
 const resetPageAndReloadTable = () => {
   table.pagination.page = 1;
   $table.value.requestServerInteraction();
@@ -385,5 +392,9 @@ const reloadTable = () => {
 
 onMounted(async () => {
   resetPageAndReloadTable();
+  const [ productCategoryResponse ] = await Promise.all([ ProductCategoryService.list() ])
+  if (productCategoryResponse.status) {
+    drawer.filter.category.options = productCategoryResponse.data.map(item => ({ label: item.name, value: item.id }))
+  }
 });
 </script>

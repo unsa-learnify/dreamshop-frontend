@@ -1,96 +1,143 @@
-import { apiGateway } from 'boot/setup-axios';
+import { apiGateway } from 'boot/setup-axios'
 
 let urls = {
-  list: `/production/pets`, // Usaremos la misma URL para todas las operaciones simuladas
-};
-
-let data = [
-  { id: 1, name: "Electrónica", description: "Dispositivos y gadgets como teléfonos inteligentes, laptops y televisores." },
-  { id: 2, name: "Electrodomésticos", description: "Aparatos para el hogar como refrigeradores, microondas y lavadoras." },
-  { id: 3, name: "Muebles", description: "Mobiliario para interiores y exteriores, como sillas, mesas y sofás." },
-  { id: 4, name: "Ropa", description: "Prendas de vestir para hombres, mujeres y niños, incluyendo zapatos y accesorios." },
-  { id: 5, name: "Deportes", description: "Equipos para actividades deportivas y al aire libre, como pelotas, raquetas y tiendas de campaña." },
-];
-
+  create: `/production/categories`,
+  retrieve: `/production/categories`,
+  list: `/production/categories`,
+  update: `/production/categories`,
+  delete: `/production/categories`,
+}
 class ProductCategoryService {
-  async list(params = {}) {
+
+  async retrieve(id) {
     try {
-      const response = await apiGateway.get(urls.list, { params });
-      return {
-        status: true,
-        data: data
-          .filter(item => `${item.name.toUpperCase()} ${item.description.toUpperCase()}`.includes(params.search?.toUpperCase() ?? ''))
-          .filter(item => item.name.toUpperCase().includes(params.name?.toUpperCase() ?? ''))
-          .filter(item => item.description.toUpperCase().includes(params.description?.toUpperCase() ?? '')) || response.data
-      };
+      const response = await apiGateway.get(urls.retrieve + `/${id}`)
+      return { 
+        status: true, 
+        data: response.data 
+      }
     } catch (error) {
-      return this.handleError(error);
+      if (error.response) {
+        return {
+          status: false,
+          data: error.response.status >= 400 && error.response.status < 500 
+            ? error.response.data
+            : "Error del servidor. Por favor, inténtelo de nuevo más tarde."
+        }
+      } else {
+        return {
+          status: false,
+          data: "Error del cliente. Verifique su configuración."
+        }
+      }
     }
   }
 
-  async retrive(id) {
+  async list(params) {
     try {
-      const response = await apiGateway.get(urls.list); // Simulación
-      const item = data.find(item => item.id === id);
-      return { status: true, data: item || response.data };
+      const response = await apiGateway.get(urls.list, { params: params })
+      if (response.status === 200) {
+        return { 
+          status: true, 
+          data: response.data 
+        }
+      }
+      else {
+        return { 
+          status: true, 
+          data: []
+        }
+      }
     } catch (error) {
-      return this.handleError(error);
+      if (error.response) {
+        return {
+          status: false,
+          data: error.response.status >= 400 && error.response.status < 500 
+            ? error.response.data
+            : "Error del servidor. Por favor, inténtelo de nuevo más tarde."
+        }
+      } else {
+        return {
+          status: false,
+          data: "Error del cliente. Verifique su configuración."
+        }
+      }
     }
   }
 
   async create(params) {
     try {
-      const response = await apiGateway.get(urls.list); // Simulación
-      const name = params.get("name");
-      const description = params.get("description");
-      const newItem = { id: data.length + 1, name, description };
-      data.push(newItem);
-      return { status: true, data: newItem || response.data };
+      console.log(urls.create);
+      const response = await apiGateway.post(urls.create, params)
+      return { 
+        status: true, 
+        data: response.data 
+      }
     } catch (error) {
-      return this.handleError(error);
+      if (error.response) {
+        return {
+          status: false,
+          data: error.response.status >= 400 && error.response.status < 500 
+            ? error.response.data
+            : "Error del servidor. Por favor, inténtelo de nuevo más tarde."
+        }
+      } else {
+        return {
+          status: false,
+          data: "Error del cliente. Verifique su configuración."
+        }
+      }
     }
   }
 
   async update(id, params) {
     try {
-      const response = await apiGateway.get(urls.list); // Simulación
-      const name = params.get("name");
-      const description = params.get("description");
-      const index = data.findIndex(item => item.id === id);
-      if (index !== -1) {
-        data[index] = { ...data[index], name, description };
+      const response = await apiGateway.patch(urls.update + `/${id}/`, params)
+      return { 
+        status: true, 
+        data: response.data 
       }
-      return { status: true, data: data[index] || response.data };
     } catch (error) {
-      return this.handleError(error);
+      if (error.response) {
+        return {
+          status: false,
+          data: error.response.status >= 400 && error.response.status < 500 
+            ? error.response.data
+            : "Error del servidor. Por favor, inténtelo de nuevo más tarde."
+        }
+      } else {
+        return {
+          status: false,
+          data: "Error del cliente. Verifique su configuración."
+        }
+      }
     }
   }
-
+  
   async delete(id) {
     try {
-      const response = await apiGateway.get(urls.list); // Simulación
-      data = data.filter(item => item.id !== id);
-      return { status: true, data: null || response.data };
+      const response = await apiGateway.delete(urls.delete + `/${id}/`)
+      return { 
+        status: true, 
+        data: response.data 
+      }
     } catch (error) {
-      return this.handleError(error);
+      if (error.response) {
+        return {
+          status: false,
+          data: error.response.status >= 400 && error.response.status < 500 
+            ? error.response.data
+            : "Error del servidor. Por favor, inténtelo de nuevo más tarde."
+        }
+      } else {
+        return {
+          status: false,
+          data: "Error del cliente. Verifique su configuración."
+        }
+      }
     }
   }
 
-  handleError(error) {
-    if (error.response) {
-      return {
-        status: false,
-        data: error.response.status >= 400 && error.response.status < 500
-          ? error.response.data
-          : "Error del servidor. Por favor, inténtelo de nuevo más tarde."
-      };
-    } else {
-      return {
-        status: false,
-        data: "Error del cliente. Verifique su configuración."
-      };
-    }
-  }
 }
 
-export default new ProductCategoryService();
+export default new ProductCategoryService()

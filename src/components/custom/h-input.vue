@@ -16,6 +16,7 @@
       :min="min"
       :max="max"
       :type="type"
+      :step="step"
       :clearable="clearable"
       hide-bottom-space
       no-error-icon
@@ -23,6 +24,7 @@
       dense
       outlined
       :maxlength="maxlength"
+      :counter="!!maxlength"
       :debounce="debounce ? 300 : 0"
     >
       <template v-slot:append>
@@ -41,6 +43,7 @@ const props = defineProps({
   modelValue: String,
   label: String,
   type: String,
+  step: String,
   min: String,
   max: String,
   placeholder: String,
