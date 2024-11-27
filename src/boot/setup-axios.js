@@ -28,7 +28,7 @@ export default boot(({ router }) => {
       return response
     },
     async error => {
-      if (error.response.status === 401) {
+      if (error.response.status === 403) {
         const { status, data } = await AuthService.refresh({ refreshToken: authStore.refreshToken.value })
         if(status){
           authStore.setAccessToken({
@@ -54,7 +54,7 @@ export default boot(({ router }) => {
   apiKeycloak.interceptors.response.use(
     response => response,
     async error => {
-      if (error.response.status === 401) {
+      if (error.response.status === 403) {
         authStore.removeTokens()
         router.push({ name: 'login' })
       }

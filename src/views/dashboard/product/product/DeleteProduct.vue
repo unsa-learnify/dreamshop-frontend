@@ -7,7 +7,7 @@
         ref="$form" 
         @submit="onSubmit"
       >
-        <h2 class="tw-text-2xl tw-text-primary">Eliminar Producto</h2> <!-- NOTE: replaceable -->
+        <h2 class="tw-text-2xl tw-text-primary">Eliminar Categoría de Producto</h2> <!-- NOTE: replaceable -->
         <p class="tw-mb-4">
           ¿Está seguro de que desea eliminar la categoría <b>{{ data.name }}</b>? <br>
           Esta acción no se puede deshacer y podría afectar a los productos registrados bajo esta categoría. 

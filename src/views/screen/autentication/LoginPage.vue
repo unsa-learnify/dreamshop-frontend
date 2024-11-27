@@ -86,7 +86,6 @@ const onSubmit = async () => {
     username: fields.username.value,
     password: fields.password.value,
   });
-  console.log(responseAuth);
   if (responseAuth.status) {
     const {
       access_token,

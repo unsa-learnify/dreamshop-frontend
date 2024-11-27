@@ -150,13 +150,13 @@
   <edit-product-category
     v-model:opened="modal.edit" 
     :data="modal.data" 
-    @created="reloadTable"
+    @updated="reloadTable"
   />
 
   <delete-product-category
     v-model:opened="modal.delete" 
     :data="modal.data" 
-    @created="resetPageAndReloadTable"
+    @deleted="resetPageAndReloadTable"
   />
   <!---------------------------->
 
@@ -188,14 +188,14 @@ const columns = [
     name: 'name', 
     field: 'name', 
     label: 'Nombre', 
-    align: 'center', 
+    align: 'left', 
     required: true,
   },
   { 
     name: 'description', 
     field: 'description', 
     label: 'Descripción', 
-    align: 'center', 
+    align: 'left', 
   },
   { 
     name: 'actions', 
@@ -217,13 +217,7 @@ const table = reactive({
     placeholder: "Buscar por nombre o descripción", /* NOTE: replaceable */
   },
   columns: columns,
-  rows: [
-    {
-      id: 1,
-      name: "asdasdas",
-      description: 'lorem iposii',
-    }
-  ],
+  rows: [],
   pagination: { 
     page: 1,
     rowsPerPage: 10,
@@ -267,11 +261,15 @@ const onRequest = async props => {
   table.pagination.descending = props.pagination.descending
   table.pagination.sortBy = props.pagination.sortBy
   table.isLoading = true
-  await ProductCategoryService.list()
+  const responseProductCategory = await ProductCategoryService.list({
+    search: table.search.value,
+    name: drawer.filter.name.value,
+    description: drawer.filter.description.value,
+  })
   table.isLoading = false
-  if(status){
-    table.rows = data.results
-    table.pagination.rowsNumber = data.count
+  if(responseProductCategory.status){
+    table.rows = responseProductCategory.data
+    table.pagination.rowsNumber = responseProductCategory.data.length
     table.pagination.page = props.pagination.page
     table.pagination.rowsPerPage = props.pagination.rowsPerPage
   }

@@ -170,28 +170,17 @@
     @created="resetPageAndReloadTable"
   />
 
- <!--  <export-risk
-    v-model:opened="modal.export" 
-    :data="modal.data" 
-  />
-
-  <create-risk
+  <edit-product
     v-model:opened="modal.create" 
     :data="modal.data" 
-    @created="resetPageAndReloadTable"
+    @created="reloadTable"
   />
 
-  <edit-risk
-    v-model:opened="modal.edit" 
-    :data="modal.data" 
-    @updated="reloadTable"
-  />
-
-  <delete-risk
-    v-model:opened="modal.delete" 
+  <delete-product
+    v-model:opened="modal.create" 
     :data="modal.data" 
     @deleted="resetPageAndReloadTable"
-  /> -->
+  />
   <!---------------------------->
 
 </template>
@@ -199,7 +188,6 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 import * as Icon from 'components/icons';
 import HInput from 'components/custom/h-input.vue';
@@ -207,10 +195,10 @@ import HSelect from 'components/custom/h-select.vue';
 import HGroupCheckbox from 'components/custom/h-group-checkbox.vue';
 
 import CreateProduct from './CreateProduct.vue';      /* NOTE: replaceable */
-/* import EditRisk from './EditRisk.vue';  */         /* NOTE: replaceable */
-/* import DeleteRisk from './DeleteRisk.vue'; */      /* NOTE: replaceable */
-/* import ExportRisk from './ExportRisk.vue'; */      /* NOTE: replaceable */
-import { exportFile } from 'quasar';
+import EditProduct from './EditProduct.vue';          /* NOTE: replaceable */
+import DeleteProduct from './DeleteProduct.vue';      /* NOTE: replaceable */
+
+import ProductService from "services/product/product.service";
 
 /* NOTE: replaceable zone */
 const columns = [
@@ -239,7 +227,7 @@ const columns = [
     name: 'category', 
     field: 'category', 
     label: 'Categoría', 
-    align: 'center', 
+    align: 'center',
     required: true,
   },
   { 
@@ -335,11 +323,14 @@ const onRequest = async props => {
   table.pagination.descending = props.pagination.descending
   table.pagination.sortBy = props.pagination.sortBy
   table.isLoading = true
-
+  const responseProduct = await ProductService.list({
+    search: table.search.value,
+    name: drawer.filter.name.value,
+  })
   table.isLoading = false
-  if(status){
-    table.rows = data.results
-    table.pagination.rowsNumber = data.count
+  if(responseProduct.status){
+    table.rows = responseProduct.data
+    table.pagination.rowsNumber = responseProduct.data.length
     table.pagination.page = props.pagination.page
     table.pagination.rowsPerPage = props.pagination.rowsPerPage
   }
