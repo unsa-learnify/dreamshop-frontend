@@ -150,7 +150,7 @@ const onSubmit = async () => {
   submitButton.loading = true
   const formData = new FormData()
   /* NOTE: replaceable zone */
-  formData.append('quantity', quantityField.value);
+  formData.append('quantity', Number(props.data.quantity) + Number(quantityField.value));
   /* NOTE: replaceable zone */
   const { status, data } = await ProductService.update(props.data.id, Object.fromEntries(formData)) /* NOTE: replaceable */
   submitButton.loading = false
