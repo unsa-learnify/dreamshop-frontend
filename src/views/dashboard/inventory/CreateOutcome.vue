@@ -87,6 +87,7 @@ const quantityField = reactive({
   rules: [
     value => value !== null && value !== ''  || 'Cantidad necesario',
     value => value >= 0  || 'Cantidad debe ser mayor o igual que 0',
+    value => value <= props.data.quantity  || `Cantidad debe ser menor o igual que ${props.data.quantity}`,
   ],
 });
 /* NOTE: replaceable zone*/
@@ -126,7 +127,7 @@ const generarNotaIngreso = ({
 **Descripción:** ${producto.description}
 **Código:** ${producto.code}
 **Precio Unitario:** ${producto.unitPrice.toFixed(2)} ${producto.currency}
-**Cantidad Ingresada:** ${cantidad} unidades
+**Cantidad Extraida:** ${cantidad} unidades
 
 ------------------------------------------------------------
 **Categorías Asociadas:**
