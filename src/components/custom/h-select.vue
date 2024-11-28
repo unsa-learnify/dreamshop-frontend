@@ -20,6 +20,7 @@
       clear-icon="close"
       :use-input="useInput"
       :use-chips="useChips"
+      :readonly="readonly"
       input-debounce="300"
       @filter="filter"
       options-dense
@@ -69,6 +70,7 @@ const props = defineProps({
   placeholder: String,
   rules: Array,
   clearable: Boolean,
+  readonly: Boolean,
   disable: Boolean,
   multiple: Boolean,
   valueFull: Boolean,

@@ -97,24 +97,24 @@
           <template v-slot:body-cell-actions="props">
             <q-td class="tw-flex tw-justify-center tw-gap-2">
               <q-btn 
-                class="tw-bg-gray-100" 
+                class="tw-bg-gray-100 tw-text-red-500" 
                 dense 
                 round 
                 flat 
-                @click="onEdit(props.row)"
+                icon="archive"
+                @click="onDecreaseStock(props.row)"
               >
-                <Icon.PenIcon class="tw-fill-amber-500 tw-w-6 tw-h-6"/>
-                <q-tooltip>Editar</q-tooltip>
+                <q-tooltip>Disminuir Stock</q-tooltip>
               </q-btn>
               <q-btn 
-                class="tw-bg-gray-100" 
+                class="tw-bg-gray-100 tw-text-green-500" 
                 dense 
                 round 
                 flat 
-                @click="onDelete(props.row)"
+                icon="unarchive"
+                @click="onIncreaseStock(props.row)"
               >
-                <Icon.TrashIcon class="tw-fill-red-500 tw-w-6 tw-h-6"/>
-                <q-tooltip>Eliminar</q-tooltip>
+                <q-tooltip>Agregar Stock</q-tooltip>
               </q-btn>
             </q-td>       
           </template>
@@ -140,13 +140,13 @@
           clearable
           @update:model-value="reloadTable"
         />
-        <h-input
+        <!-- <h-input
           v-model="drawer.filter.name.value"
           :label="drawer.filter.name.label"
           debounce
           clearable
           @update:model-value="reloadTable"
-        />
+        /> -->
         <h-select
           v-model="drawer.filter.category.value"
           :label="drawer.filter.category.label"
@@ -206,18 +206,40 @@
     </q-form>
   </q-drawer>
 
+  <create-movement
+    v-model:opened="modal.initStock" 
+    :data="modal.data" 
+    @created="reloadTable"
+  />
+
+  <create-income
+    v-model:opened="modal.increaseStock" 
+    :data="modal.data" 
+    @created="reloadTable"
+  />
+
+  <create-outcome
+    v-model:opened="modal.decreaseStock " 
+    :data="modal.data" 
+    @created="reloadTable"
+  />
+
 </template>
 
 <script setup>
+import { format } from 'date-fns';
 import { exportFile } from 'quasar';
-import { format, parseISO } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { ref, reactive, onMounted } from 'vue';
 
 import * as Icon from 'components/icons';
 import HInput from 'components/custom/h-input.vue';
 import HSelect from 'components/custom/h-select.vue';
 import HGroupCheckbox from 'components/custom/h-group-checkbox.vue';
+
+import CreateMovement from './CreateMovement.vue';      /* NOTE: replaceable */
+import CreateIncome from './CreateIncome.vue';      /* NOTE: replaceable */
+import CreateOutcome from './CreateOutcome.vue';      /* NOTE: replaceable */
+
 
 import ProductService from "services/product/product.service";
 import ProductCategoryService from "services/product/product-category.service";
@@ -284,7 +306,7 @@ const table = reactive({
   isLoading: false,
   search: {
     value: null,
-    placeholder: "Buscar por código o nombre", /* NOTE: replaceable */
+    placeholder: "Buscar por nombre", /* NOTE: replaceable */
   },
   columns: columns,
   rows: [],
@@ -340,10 +362,9 @@ const drawer = reactive({
 
 // Controlador de modals
 const modal = reactive({
-  create: false,
-  edit: false,
-  delete: false,
-  export: false,
+  initStock: false,
+  increaseStock: false,
+  decreaseStock: false,
   data: null,
 });
 
@@ -353,9 +374,9 @@ const onRequest = async props => {
   table.pagination.sortBy = props.pagination.sortBy
   table.isLoading = true
   const responseProduct = await ProductService.list({
-    search: table.search.value,
-    code: drawer.filter.code.value,
-    name: drawer.filter.name.value,
+    name: table.search.value,
+    code: drawer.filter.code.value ,
+    // name: drawer.filter.name.value ,
     categoryId: drawer.filter.category.value,
     minPrice: drawer.filter.min_price.value,
     maxPrice: drawer.filter.max_price.value,
@@ -375,24 +396,37 @@ const onToogle = () => {
   drawer.isOpen = !drawer.isOpen
 }
 
+const onInitStock = async () => {
+  modal.initStock = true
+}
+
+const onIncreaseStock = (row) => {
+  modal.increaseStock = true
+  modal.data = row
+}
+
+const onDecreaseStock = (row) => {
+  modal.decreaseStock = true
+  modal.data = row
+}
+
 const onExportPdf = async () => {
   exportPdfButton.isLoading = true;
-  const { status, blob } = await ProductService.exportToPDF();
+  const { status, blob } = await ProductService.exportToPDF({
+    name: table.search.value,
+    code: drawer.filter.code.value ,
+    // name: drawer.filter.name.value ,
+    categoryId: drawer.filter.category.value,
+    minPrice: drawer.filter.min_price.value,
+    maxPrice: drawer.filter.max_price.value,
+    minQuantity: drawer.filter.min_quantity.value,
+    maxQuantity: drawer.filter.max_quantity.value,
+  });
   if (status) {
-    const filename = `Inventario de productos ${format(new Date(), 'yyyy-MM-dd')}.pdf`; 
+    const filename = `Reporte de productos ${format(new Date(), 'yyyy-MM-dd')}.pdf`; 
     exportFile(filename, blob);
   }
   exportPdfButton.isLoading = false;
-}
-
-const onEdit = (row) => {
-  modal.edit = true
-  modal.data = row
-}
-
-const onDelete = (row) => {
-  modal.delete = true
-  modal.data = row
 }
 
 const resetPageAndReloadTable = () => {

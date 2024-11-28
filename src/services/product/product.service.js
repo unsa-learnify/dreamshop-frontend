@@ -7,7 +7,7 @@ let urls = {
   update: `/products`,
   delete: `/products`,
   assign: id => `/products/${id}/categories`,
-  exportToPDF: `/products`,
+  exportToPDF: `/products/reports`,
 }
 class ProductService {
 

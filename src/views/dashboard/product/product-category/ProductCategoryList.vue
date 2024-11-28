@@ -114,13 +114,13 @@
       <div class="tw-flex tw-flex-col tw-gap-3 tw-mb-6">
         <h3 class="tw-font-roboto-condensed tw-text-secondary tw-font-bold tw-text-base">Filtros por columna</h3>
         <!-- NOTE: replaceable zone -->
-        <h-input
+        <!-- <h-input
           v-model="drawer.filter.name.value"
           :label="drawer.filter.name.label"
           debounce
           clearable
           @update:model-value="reloadTable"
-        />
+        /> -->
         <h-input
           v-model="drawer.filter.description.value"
           :label="drawer.filter.description.label"
@@ -216,7 +216,7 @@ const table = reactive({
   isLoading: false,
   search: {
     value: null,
-    placeholder: "Buscar por nombre o descripción", /* NOTE: replaceable */
+    placeholder: "Buscar por nombre", /* NOTE: replaceable */
   },
   columns: columns,
   rows: [],
@@ -264,8 +264,8 @@ const onRequest = async props => {
   table.pagination.sortBy = props.pagination.sortBy
   table.isLoading = true
   const responseProductCategory = await ProductCategoryService.list({
-    search: table.search.value,
-    name: drawer.filter.name.value,
+    name: table.search.value,
+    //name: drawer.filter.name.value,
     description: drawer.filter.description.value,
   })
   table.isLoading = false

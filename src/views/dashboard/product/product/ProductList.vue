@@ -141,13 +141,13 @@
           clearable
           @update:model-value="reloadTable"
         />
-        <h-input
+        <!-- <h-input
           v-model="drawer.filter.name.value"
           :label="drawer.filter.name.label"
           debounce
           clearable
           @update:model-value="reloadTable"
-        />
+        /> -->
         <h-select
           v-model="drawer.filter.category.value"
           :label="drawer.filter.category.label"
@@ -284,7 +284,7 @@ const table = reactive({
   isLoading: false,
   search: {
     value: null,
-    placeholder: "Buscar por código o nombre", /* NOTE: replaceable */
+    placeholder: "Buscar por nombre", /* NOTE: replaceable */
   },
   columns: columns,
   rows: [],
@@ -345,9 +345,9 @@ const onRequest = async props => {
   table.pagination.sortBy = props.pagination.sortBy
   table.isLoading = true
   const responseProduct = await ProductService.list({
-    search: table.search.value,
-    code: drawer.filter.code.value,
-    name: drawer.filter.name.value,
+    name: table.search.value,
+    code: drawer.filter.code.value ,
+    // name: drawer.filter.name.value ,
     categoryId: drawer.filter.category.value,
     minPrice: drawer.filter.min_price.value,
     maxPrice: drawer.filter.max_price.value,

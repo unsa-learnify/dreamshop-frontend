@@ -61,14 +61,25 @@ const authStore = useAuthStore();
 
 const infoUser = computed(() => {
   try {
-    const decode = jwtDecode(authStore.accessToken.value);
-    return {
-      name: decode.name || '',
-      preferred_username: decode.preferred_username || '',
-      given_name: decode.given_name || '',
-      family_name: decode.family_name || '',
-      email: decode.email || ''
-    };
+    if (authStore.accessToken.value) {
+      const decode = jwtDecode(authStore.accessToken.value);
+      return {
+        name: decode.name || '',
+        preferred_username: decode.preferred_username || '',
+        given_name: decode.given_name || '',
+        family_name: decode.family_name || '',
+        email: decode.email || ''
+      };
+    }
+    else {
+      return {
+        name: '',
+        preferred_username: '',
+        given_name: '',
+        family_name: '',
+        email: ''
+      }
+    }
   } catch (error) {
     console.error('Error al decodificar el token JWT:', error);
     return {

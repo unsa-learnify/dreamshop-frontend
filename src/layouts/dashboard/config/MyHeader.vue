@@ -27,7 +27,7 @@ import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from 'stores/authStore'
 
-import AuthService from 'services/auth/auth.service'
+//import AuthService from 'services/auth/auth.service' //TODO
 
 const emit = defineEmits(['changeDrawerState'])
 
@@ -36,7 +36,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const logout = async () => {
-  const responseAuth = await AuthService.logout(authStore.refreshToken.value)
+  /* const responseAuth = await AuthService.logout(authStore.refreshToken.value)
   if(responseAuth.status){
     $q.notify({ 
       type: 'my-successful', 
@@ -48,7 +48,11 @@ const logout = async () => {
       type: 'my-error', 
       message: "Hubo un error"
     })
-  }
+  } */
+  $q.notify({ 
+    type: 'my-successful', 
+    message: "Sesión ha finalizado" 
+  })
   authStore.removeTokens()
   router.push({ name: 'login-screen' })
 }
