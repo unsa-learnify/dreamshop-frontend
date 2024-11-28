@@ -17,12 +17,22 @@
             :rules="nameField.rules"
             :maxlength="255"
           />
+          <h-input
+            class="tw-col-span-full"
+            v-model="codeField.value"
+            :label="codeField.label"
+            :rules="codeField.rules"
+            mask="###-##-###-####-#"
+            hint="Formato: xxx-xx-xxx-xxxx-x"
+          />
           <h-select
             class="tw-col-span-full"
             v-model="productCategoryField.value"
             :label="productCategoryField.label"
             :options="productCategoryField.options"
             :rules="productCategoryField.rules"
+            multiple
+            use-chips
           />
           <h-select
             v-model="currencyField.value"
@@ -102,11 +112,18 @@ const nameField = reactive({
     value => value !== null && value !== '' || 'Nombre necesario' 
   ],
 });
-const productCategoryField = reactive({
-  label: 'Categoría de Producto *',
+const codeField = reactive({
+  label: 'Código *',
   value: null,
   rules: [
-    value => value !== null || 'Categoría de Producto necesaria' 
+    value => value !== null && value !== '' || 'Código necesario' 
+  ],
+});
+const productCategoryField = reactive({
+  label: 'Categoría de Producto *',
+  value: [],
+  rules: [
+    value => value.length > 0 || 'Categoría de Producto necesaria' 
   ],
 });
 const currencyField = reactive({
@@ -142,16 +159,17 @@ const submitButton = reactive({
 })
 
 const onOpen = async () => {
-  const [ productCategoryResponse ] = await Promise.all([ ProductCategoryService.list() ])
+  const [ productCategoryResponse ] = await Promise.all([ ProductCategoryService.list({ page: 0, items: 100 }) ])
   if (productCategoryResponse.status) {
-    productCategoryField.options = productCategoryResponse.data.map(item => ({ label: item.name, value: item.id }))
+    productCategoryField.options = productCategoryResponse.data.items.map(item => ({ label: item.name, value: item.id }))
   }
 }
 
 const onClose = () => {
   /* NOTE: replaceable zone */
   nameField.value = null
-  productCategoryField.value = null
+  codeField.value = null
+  productCategoryField.value = []
   currencyField.value = null
   priceField.value = null
   descriptionField.value = null
@@ -167,7 +185,7 @@ const onSubmit = async () => {
   const formData = new FormData()
   /* NOTE: replaceable zone */
   formData.append('name', nameField.value);
-  //formData.append('category', productCategoryField.value);
+  formData.append('code', codeField.value);
   formData.append('currency', currencyField.value);
   formData.append('unitPrice', priceField.value);
   formData.append('description', descriptionField.value);
@@ -176,19 +194,22 @@ const onSubmit = async () => {
   submitButton.loading = false
 
   if (status){
-    quasar.notify({ 
-      type: 'my-successful', 
-      message: 'Registro exitoso'
+    const response = await ProductService.assign(data.id, {
+      "categoryIds": productCategoryField.value
     })
-    emit('created')
+    if (response.status) {
+      quasar.notify({ 
+        type: 'my-successful', 
+        message: 'Registro exitoso'
+      })
+      emit('created')
+    }
     isOpened.value = false
   }
   else{
     quasar.notify({ 
       type: 'my-error', 
-      message: (typeof(data) === "string") 
-        ? data 
-        : Object.values(data).flatMap(values => values).join(" ")
+      message: (typeof(data) === "string") ? data : data.message
     })
   }
 }

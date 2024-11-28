@@ -264,13 +264,14 @@ const onRequest = async props => {
   table.pagination.sortBy = props.pagination.sortBy
   table.isLoading = true
   const responseProductCategory = await ProductCategoryService.list({
-    name: drawer.filter.name.value || table.search.value,
-    description: drawer.filter.description.value /* || table.search.value, */ // TODO
+    search: table.search.value,
+    name: drawer.filter.name.value,
+    description: drawer.filter.description.value,
   })
   table.isLoading = false
   if(responseProductCategory.status){
-    table.rows = responseProductCategory.data
-    table.pagination.rowsNumber = responseProductCategory.data.length
+    table.rows = responseProductCategory.data.items
+    table.pagination.rowsNumber = responseProductCategory.data.totalItems
     table.pagination.page = props.pagination.page
     table.pagination.rowsPerPage = props.pagination.rowsPerPage
   }

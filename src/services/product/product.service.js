@@ -1,12 +1,13 @@
 import { apiGateway } from 'boot/setup-axios'
 
 let urls = {
-  create: `/production/products`,
-  retrieve: `/production/products`,
-  list: `/production/products`,
-  update: `/production/products`,
-  delete: `/production/products`,
-  exportToPDF: `/production/products`,
+  create: `/products`,
+  retrieve: `/products`,
+  list: `/products`,
+  update: `/products`,
+  delete: `/products`,
+  assign: id => `/products/${id}/categories`,
+  exportToPDF: `/products`,
 }
 class ProductService {
 
@@ -46,7 +47,7 @@ class ProductService {
       else {
         return { 
           status: true, 
-          data: []
+          data: {}
         }
       }
     } catch (error) {
@@ -70,6 +71,30 @@ class ProductService {
     try {
       console.log(urls.create);
       const response = await apiGateway.post(urls.create, params)
+      return { 
+        status: true, 
+        data: response.data 
+      }
+    } catch (error) {
+      if (error.response) {
+        return {
+          status: false,
+          data: error.response.status >= 400 && error.response.status < 500 
+            ? error.response.data
+            : "Error del servidor. Por favor, inténtelo de nuevo más tarde."
+        }
+      } else {
+        return {
+          status: false,
+          data: "Error del cliente. Verifique su configuración."
+        }
+      }
+    }
+  }
+
+  async assign(id, params) {
+    try {
+      const response = await apiGateway.post(urls.assign(id), params)
       return { 
         status: true, 
         data: response.data 

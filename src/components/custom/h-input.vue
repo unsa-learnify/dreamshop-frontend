@@ -17,6 +17,8 @@
       :max="max"
       :type="type"
       :step="step"
+      :mask="mask"
+      :hint="hint"
       :clearable="clearable"
       hide-bottom-space
       no-error-icon
@@ -44,6 +46,8 @@ const props = defineProps({
   label: String,
   type: String,
   step: String,
+  mask: String,
+  hint: String,
   min: String,
   max: String,
   placeholder: String,

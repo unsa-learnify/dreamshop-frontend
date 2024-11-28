@@ -74,6 +74,20 @@
             </q-td>
           </template>
 
+          <template #body-cell-category="props">
+            <q-td :props="props">
+              <q-chip 
+                v-for="{ id, name } in props.value" :key="id"
+                outline 
+                dense
+                color="primary" 
+                text-color="white"
+              >
+                {{ name }}
+              </q-chip>
+            </q-td>
+          </template>
+
           <template #body-cell-price="props">
             <q-td :props="props">
               {{ Number(props.row.unitPrice).toFixed(2) }} {{ props.row.currency }} 
@@ -196,8 +210,6 @@
 </template>
 
 <script setup>
-import { format, parseISO } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { ref, reactive, onMounted } from 'vue';
 
 import * as Icon from 'components/icons';
@@ -244,10 +256,9 @@ const columns = [
   },
   { 
     name: 'category', 
-    field: 'category', 
+    field: 'categories', 
     label: 'Categorías de Productos', 
-    align: 'center',
-    format: value => value?.name,
+    align: 'left',
     required: true,
   },
   { 
@@ -255,20 +266,6 @@ const columns = [
     field: 'unitPrice', 
     label: 'Precio Unitario', 
     align: 'right', 
-  },
-  { 
-    name: 'createdAt', 
-    field: 'createdAt', 
-    label: 'Fecha de Creación', 
-    align: 'center', 
-    format: value => value ? format(parseISO(value), 'PPpp', { locale: es }) : '',
-  },
-  { 
-    name: 'updatedAt', 
-    field: 'updatedAt', 
-    label: 'Fecha de Actualización', 
-    align: 'center', 
-    format: value => value ? format(parseISO(value), 'PPpp', { locale: es }) : '',
   },
   { 
     name: 'actions', 
@@ -348,16 +345,17 @@ const onRequest = async props => {
   table.pagination.sortBy = props.pagination.sortBy
   table.isLoading = true
   const responseProduct = await ProductService.list({
-    code: drawer.filter.code.value || table.search.value,
-    name: drawer.filter.name.value || table.search.value,
-    category: drawer.filter.category.value,
-    min_price: drawer.filter.min_price.value,
-    max_price: drawer.filter.max_price.value,
+    search: table.search.value,
+    code: drawer.filter.code.value,
+    name: drawer.filter.name.value,
+    categoryId: drawer.filter.category.value,
+    minPrice: drawer.filter.min_price.value,
+    maxPrice: drawer.filter.max_price.value,
   })
   table.isLoading = false
   if(responseProduct.status){
-    table.rows = responseProduct.data
-    table.pagination.rowsNumber = responseProduct.data.length
+    table.rows = responseProduct.data?.items ?? []
+    table.pagination.rowsNumber = responseProduct.data?.totalItems ?? 0
     table.pagination.page = props.pagination.page
     table.pagination.rowsPerPage = props.pagination.rowsPerPage
   }
@@ -392,9 +390,9 @@ const reloadTable = () => {
 
 onMounted(async () => {
   resetPageAndReloadTable();
-  const [ productCategoryResponse ] = await Promise.all([ ProductCategoryService.list() ])
+  const [ productCategoryResponse ] = await Promise.all([ ProductCategoryService.list({ page: 0, size: 100 }) ])
   if (productCategoryResponse.status) {
-    drawer.filter.category.options = productCategoryResponse.data.map(item => ({ label: item.name, value: item.id }))
+    drawer.filter.category.options = productCategoryResponse.data.items.map(item => ({ label: item.name, value: item.id }))
   }
 });
 </script>

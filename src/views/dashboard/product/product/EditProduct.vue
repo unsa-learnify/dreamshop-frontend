@@ -23,6 +23,8 @@
             :label="productCategoryField.label"
             :options="productCategoryField.options"
             :rules="productCategoryField.rules"
+            multiple
+            use-chips
           />
           <h-select
             v-model="currencyField.value"
@@ -102,11 +104,18 @@ const nameField = reactive({
     value => value !== null && value !== '' || 'Nombre necesario' 
   ],
 });
+const codeField = reactive({
+  label: 'Código *',
+  value: null,
+  rules: [
+    value => value !== null && value !== '' || 'Código necesario' 
+  ],
+});
 const productCategoryField = reactive({
   label: 'Categoría de Producto *',
   value: null,
   rules: [
-    value => value !== null || 'Categoría de Producto necesaria' 
+    value => value.length > 0 || 'Categoría de Producto necesaria' 
   ],
 });
 const currencyField = reactive({
@@ -142,23 +151,25 @@ const submitButton = reactive({
 })
 
 const onOpen = async () => {
-  const [ productResponse, productCategoryResponse ] = await Promise.all([ ProductService.retrieve(props.data.id), ProductCategoryService.list() ])
+  const [ productResponse, productCategoryResponse ] = await Promise.all([ ProductService.retrieve(props.data.id), ProductCategoryService.list({ page: 0, items: 100 }) ])
   if (productResponse.status) {
     nameField.value = productResponse.data.name
-    productCategoryField.value = productResponse.data.category
+    codeField.value = productResponse.data.code
+    productCategoryField.value = productResponse.data.categories.map(item => item.id)
     currencyField.value = productResponse.data.currency
     priceField.value = String(productResponse.data.unitPrice)  
     descriptionField.value = productResponse.data.description
   }
   if (productCategoryResponse.status) {
-    productCategoryField.options = productCategoryResponse.data.map(item => ({ label: item.name, value: item.id }))
+    productCategoryField.options = productCategoryResponse.data.items.map(item => ({ label: item.name, value: item.id }))
   }
 }
 
 const onClose = () => {
   /* NOTE: replaceable zone */
   nameField.value = null
-  productCategoryField.value = null
+  codeField.value = null
+  productCategoryField.value = []
   currencyField.value = null
   priceField.value = null
   descriptionField.value = null
@@ -174,7 +185,7 @@ const onSubmit = async () => {
   const formData = new FormData()
   /* NOTE: replaceable zone */
   formData.append('name', nameField.value);
-  //formData.append('category', productCategoryField.value);
+  formData.append('code', codeField.value);
   formData.append('currency', currencyField.value);
   formData.append('unitPrice', priceField.value);
   formData.append('description', descriptionField.value);
@@ -183,19 +194,22 @@ const onSubmit = async () => {
   submitButton.loading = false
 
   if (status){
-    quasar.notify({ 
-      type: 'my-successful', 
-      message: 'Cambios registrados'
+    const response = await ProductService.assign(props.data.id, {
+      "categoryIds": productCategoryField.value
     })
-    emit('updated')
+    if (response.status) {
+      quasar.notify({ 
+        type: 'my-successful', 
+        message: 'Cambios registrados'
+      })
+      emit('updated')
+    }
     isOpened.value = false
   }
   else{
     quasar.notify({ 
       type: 'my-error', 
-      message: (typeof(data) === "string") 
-        ? data 
-        : Object.values(data).flatMap(values => values).join(" ")
+      message: (typeof(data) === "string") ? data : data.message
     })
   }
 }

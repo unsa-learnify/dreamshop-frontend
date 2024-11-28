@@ -1,11 +1,11 @@
 import { apiGateway } from 'boot/setup-axios'
 
 let urls = {
-  create: `/production/categories`,
-  retrieve: `/production/categories`,
-  list: `/production/categories`,
-  update: `/production/categories`,
-  delete: `/production/categories`,
+  create: `/categories`,
+  retrieve: `/categories`,
+  list: `/categories`,
+  update: `/categories`,
+  delete: `/categories`,
 }
 class ProductCategoryService {
 
@@ -44,8 +44,8 @@ class ProductCategoryService {
       }
       else {
         return { 
-          status: true, 
-          data: []
+          status: false, 
+          data: "Sin resultados"
         }
       }
     } catch (error) {
