@@ -130,8 +130,8 @@ const currencyField = reactive({
   label: 'Tipo de Moneda *',
   value: null,
   options: [
-    { value: 'PEN', label: 'Nuevos Soles', disable: true },
-    { value: 'EUR', label: 'Euros', disable: true },
+    { value: 'PEN', label: 'Nuevos Soles'},
+    { value: 'EUR', label: 'Euros'},
     { value: 'USD', label: 'Dólares' },
   ],
   rules: [
