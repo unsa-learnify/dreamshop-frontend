@@ -22,6 +22,12 @@ const routes = [
         meta: { requiresAuth: true },
         component: () => import('views/dashboard/product/product-category/ProductCategoryList.vue') 
       },
+      {
+        path: "user",
+        name: "user-dashboard",
+        meta: { requiresAuth: true },
+        component: () => import("views/dashboard/user/UserList.vue"),
+      },
     ],
   },
 

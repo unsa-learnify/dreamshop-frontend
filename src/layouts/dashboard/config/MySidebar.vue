@@ -25,7 +25,7 @@
             'product-category-dashboard',
           ]"
           label="Gestión de Productos"
-          :iconComponent="Icon.HomeIcon"
+          :iconComponent="Icon.BookIcon"
         >
           <h-sidebar-item
             routeName="product-dashboard"
@@ -36,6 +36,12 @@
             label="Categorías de Productos"
           />
         </h-sidebar-expansion-item>
+
+        <h-sidebar-item
+          routeName="user-dashboard"
+          label="Usuario"
+          :iconComponent="Icon.UserIcon"
+        />
       </div>
     </div>
   </div>
