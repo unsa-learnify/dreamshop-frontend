@@ -192,12 +192,14 @@ const onSubmit = async () => {
   /* NOTE: replaceable zone */
   const { status, data } = await ProductService.update(props.data.id, Object.fromEntries(formData)) /* NOTE: replaceable */
   submitButton.loading = false
-
   if (status){
-    const response = await ProductService.assign(props.data.id, {
+    const response1 = await ProductService.unassign(props.data.id, {
+      "categoryIds": props.data.categories.map(item => item.id)
+    })
+    const response2 = await ProductService.assign(props.data.id, {
       "categoryIds": productCategoryField.value
     })
-    if (response.status) {
+    if (response1.status && response2.status) {
       quasar.notify({ 
         type: 'my-successful', 
         message: 'Cambios registrados'
