@@ -182,7 +182,7 @@ const columns = [
     align: 'left', 
   },
   { 
-    name: 'category', 
+    name: 'username', 
     field: 'username', 
     label: 'Nombre de Usuario', 
     align: 'left',
@@ -198,6 +198,7 @@ const columns = [
     field: 'roles', 
     label: 'Roles', 
     align: 'left', 
+    format: value => value.join(', ')
   },
 ];
 /* ----------------------- */
@@ -263,7 +264,7 @@ const onRequest = async props => {
   table.pagination.descending = props.pagination.descending
   table.pagination.sortBy = props.pagination.sortBy
   table.isLoading = true
-  const responseProduct = await UserService.list({
+  const responseUser = await UserService.list({
     search: table.search.value,
     name: drawer.filter.name.value,
     lastname: drawer.filter.lastname.value,
@@ -271,9 +272,9 @@ const onRequest = async props => {
     email: drawer.filter.email.value,
   })
   table.isLoading = false
-  if(responseProduct.status){
-    table.rows = responseProduct.data?.items ?? []
-    table.pagination.rowsNumber = responseProduct.data?.totalItems ?? 0
+  if(responseUser.status){
+    table.rows = responseUser.data ?? []
+    table.pagination.rowsNumber = responseUser.data ?? 0
     table.pagination.page = props.pagination.page
     table.pagination.rowsPerPage = props.pagination.rowsPerPage
   }
