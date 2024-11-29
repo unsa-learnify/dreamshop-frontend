@@ -273,8 +273,8 @@ const onRequest = async props => {
   })
   table.isLoading = false
   if(responseUser.status){
-    table.rows = responseUser.data ?? []
-    table.pagination.rowsNumber = responseUser.data ?? 0
+    table.rows = responseUser.data
+    table.pagination.rowsNumber = responseUser.data.length
     table.pagination.page = props.pagination.page
     table.pagination.rowsPerPage = props.pagination.rowsPerPage
   }

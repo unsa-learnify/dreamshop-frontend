@@ -23,6 +23,7 @@
             :maxlength="255"
           />
           <h-input
+            class="tw-col-span-full"
             v-model="usernameField.value"
             :label="usernameField.label"
             :rules="usernameField.rules"
@@ -34,6 +35,20 @@
             :rules="emailField.rules"
             :maxlength="255"
           />
+          <h-input
+            :label="passwordField.label"
+            v-model="passwordField.value"
+            :rules="passwordField.rules"
+            :type="passwordField.isVisible ? 'text' : 'password'"
+          >
+            <template v-slot:append>
+              <q-icon
+                class="tw-cursor-pointer"
+                :name="passwordField.isVisible ? 'visibility_off' : 'visibility'"
+                @click="passwordField.isVisible = !passwordField.isVisible"
+              />
+            </template>
+          </h-input>
           <!-- NOTE: replaceable zone -->
         </div>
 
@@ -110,6 +125,12 @@ const emailField = reactive({
     value => /^\w+([.-_+]?\w+)*@\w+([.-]?\w+)*(\.\w{2,10})+$/.test(value) || 'Correo electrónico inválido'
   ],
 });
+const passwordField = reactive({
+  label: 'Contraseña',
+  value: '',
+  isVisible: false,
+  rules: [ value => !!value || 'La contraseña es requerida' ]
+})
 /* NOTE: replaceable zone*/
 
 const submitButton = reactive({ 
@@ -136,25 +157,21 @@ const onSubmit = async () => {
   submitButton.loading = true
   const formData = new FormData()
   /* NOTE: replaceable zone */
-  formData.append('name', nameField.value);
+  formData.append('firstname', nameField.value);
   formData.append('lastname', lastnameField.value);
   formData.append('username', usernameField.value);
   formData.append('email', emailField.value);
+  formData.append('password', passwordField.value);
   /* NOTE: replaceable zone */
   const { status, data } = await UserService.create(Object.fromEntries(formData)) /* NOTE: replaceable */
   submitButton.loading = false
 
   if (status){
-    const response = await UserService.assign(data.id, {
-      "categoryIds": productCategoryField.value
+    quasar.notify({ 
+      type: 'my-successful', 
+      message: 'Registro exitoso'
     })
-    if (response.status) {
-      quasar.notify({ 
-        type: 'my-successful', 
-        message: 'Registro exitoso'
-      })
-      emit('created')
-    }
+    emit('created')
     isOpened.value = false
   }
   else{
