@@ -25,7 +25,16 @@
 
         <!-- Botones de acciones -->
         <div class="tw-flex tw-justify-end tw-items-center tw-gap-2">
-          <!-- Botón para abrir el panel de filtros avanzados -->
+          <q-btn 
+            class="tw-bg-gray-100" 
+            dense 
+            round 
+            flat 
+            @click="onCreate"
+          >
+            <Icon.PlusIcon class="tw-fill-primary tw-w-6 tw-h-6"/>
+            <q-tooltip>Filtros</q-tooltip>
+          </q-btn>
           <q-btn 
             class="tw-bg-gray-100" 
             dense 
@@ -37,6 +46,7 @@
             <q-tooltip>Filtros</q-tooltip>
           </q-btn>
         </div>
+        
       </div>
 
       <!-- Tabla -->
@@ -130,6 +140,12 @@
     </q-form>
   </q-drawer>
 
+  <create-user
+    v-model:opened="modal.create" 
+    :data="modal.data" 
+    @created="resetPageAndReloadTable"
+  />
+
 </template>
 
 <script setup>
@@ -140,6 +156,8 @@ import HInput from 'components/custom/h-input.vue';
 import HGroupCheckbox from 'components/custom/h-group-checkbox.vue';
 
 import UserService from "services/user/user.service";
+
+import CreateUser from './CreateUser.vue';      /* NOTE: replaceable */
 
 /* NOTE: replaceable zone */
 const columns = [
@@ -174,7 +192,13 @@ const columns = [
     field: 'email', 
     label: 'Correo Electrónico', 
     align: 'left', 
-  }
+  },
+  { 
+    name: 'roles', 
+    field: 'roles', 
+    label: 'Roles', 
+    align: 'left', 
+  },
 ];
 /* ----------------------- */
 
@@ -186,7 +210,7 @@ const table = reactive({
   isLoading: false,
   search: {
     value: null,
-    placeholder: "Buscar por código o nombre", /* NOTE: replaceable */
+    placeholder: "Buscar nombre", /* NOTE: replaceable */
   },
   columns: columns,
   rows: [],
@@ -227,6 +251,13 @@ const drawer = reactive({
   },
 })
 
+// Controlador de modals
+const modal = reactive({
+  create: false,
+  data: null,
+});
+
+
 // Metodos
 const onRequest = async props => {
   table.pagination.descending = props.pagination.descending
@@ -250,6 +281,10 @@ const onRequest = async props => {
 
 const onToogle = () => {
   drawer.isOpen = !drawer.isOpen
+}
+
+const onCreate = () => {
+  modal.create = true
 }
 
 const resetPageAndReloadTable = () => {
